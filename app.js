@@ -26,6 +26,7 @@ const map = []
 //     };
 // }
 const vpnmap = {'crypto map': {}}
+
 const readit = async () => {
     const rl = readline.createInterface({
         input: fileStream
@@ -51,27 +52,35 @@ const readit = async () => {
                 cryptoVariable = cryptomap[7];
             }else if(cryptoCommand=="set" && cryptoVariable=="ikev2"){
                 cryptoCommand = "set ikev2 ipsec-proposal";
-                cryptoVariable = cryptomap[8];
-            }else if(cryptoCommand=="set" && cryptoVariable=="security-association" && cryptoVariable2=="lifetime"){
+                cryptoVariable = cryptomap[7];
+            }else if(cryptoCommand=="set" && cryptoVariable=="security-association"){
                 cryptoCommand = "set security-association lifetime";
-                cryptoVariable = cryptomap[8];
+                cryptoVariable = cryptomap[7];
+            }else if(cryptoCommand== "set" && cryptoVariable=="pfs"){
+                cryptoCommand="set";
+                cryptoVariable="pfs";
             }
             const thejson = {"crypto map": {
-                cryptomapName:{
-                    cryptomapNumber: {
-                        cryptoCommand: cryptoVariable
+                [cryptomapName]:{
+                    [cryptomapNumber]: {
+                        [cryptoCommand]: cryptoVariable
                     }
                 }
             }
         };
-            console.log(cryptoCommand);
+            // console.log(cryptoVariable2)
+            console.log(JSON.stringify(thejson));
           }
       }   
       console.log('The file has been saved!');
 }
+// function cryptoJson 
 readit();
 
-
+// const runit = async () => {
+//   const readit = await readit()  
+//   cryptoJson
+// }
 
 
 
