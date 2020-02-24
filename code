@@ -36,3 +36,25 @@ if cryptocommand == "match"
         }
     }   
 }
+
+
+crypto map BACKUPISP 28 match address JDALTON
+crypto map BACKUPISP 28 set peer 88.88.88.88 
+crypto map BACKUPISP 28 set ikev1 transform-set ESP-AES-SHA
+
+tunnel-group 88.88.88.88 type ipsec-l2l
+tunnel-group 88.88.88.88 ipsec-attributes
+ ikev1 pre-shared-key IamgettingIKEv1Keys
+
+crypto map BACKUPISP 2019 set pfs group24
+crypto map BACKUPISP 2019 set peer 105.105.105.105 
+crypto map BACKUPISP 2019 set ikev2 ipsec-proposal IKEV2_AES_GCM_256
+
+tunnel-group 105.105.105.105 type ipsec-l2l
+tunnel-group 105.105.105.105 ipsec-attributes
+ ikev2 remote-authentication pre-shared-key IKEV2_KEY_REMOTE
+ ikev2 local-authentication pre-shared-key IKEV2_KEY_LOCAL
+
+
+REGEX FOR IP ADDRESSES
+\d{1,3}\b

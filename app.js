@@ -26,12 +26,13 @@ const map = []
 //     };
 // }
 const vpnmap = {'crypto map': {}}
+const vpnTunnelGroup = {};
 
-const readit = async () => {
-    const rl = readline.createInterface({
+const cryptoMapConfig = async () => {
+    const readCryptoMap = readline.createInterface({
         input: fileStream
       });
-      for await (const line of rl) { 
+      for await (const line of readCryptoMap) { 
           if (line.includes("crypto map")){
             var cryptomap  = line.split(" ");
             var cryptomapName = cryptomap[2];
@@ -75,15 +76,36 @@ const readit = async () => {
       console.log('The file has been saved!');
 }
 // function cryptoJson 
-readit();
+
+// cryptoMapConfig();
 
 // const runit = async () => {
 //   const readit = await readit()  
 //   cryptoJson
 // }
+function ValidateIPaddress(ipaddress) {  
+    if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {  
+      return (true)  
+    }  
+    alert("You have entered an invalid IP address!")  
+    return (false)  
+  }  
+  
+const tunnelGroupConfig = async () => {
+    var regex = new RegExp('\d{1,3}');
+    const readCryptoMap = readline.createInterface({
+        input: fileStream
+      });
+      for await (const line of readCryptoMap) { 
+          if (regex.test(line)){
+              console.log(line);
+          };
+        };
+    };
 
+    tunnelGroupConfig();
 
-
+          
 
 
 
