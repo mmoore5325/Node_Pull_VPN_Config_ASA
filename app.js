@@ -1,5 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
+const stream = require('stream');
 const fileStream = fs.createReadStream('CWA.txt');
 const map = []
 
@@ -90,7 +91,9 @@ function ValidateIPaddress(ipaddress) {
     alert("You have entered an invalid IP address!")  
     return (false)  
   }  
-  
+
+tempArray = []
+i=0;
 const tunnelGroupConfig = async () => {
     var regex = new RegExp(/^(?=.*[^\.]$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.?){4}$/g);
     const readCryptoMap = readline.createInterface({
@@ -98,7 +101,9 @@ const tunnelGroupConfig = async () => {
     });
     for await (const line of readCryptoMap) {
         if (line.includes("tunnel-group") && (regex.test(line.split(" ")[1]))) {
-            console.log(line);
+            temp = line.split(" ");
+            tempArray[i] = temp[1];
+            console.log(tempArray);
         } else {
             // console.log(line.split(" ")[6])
         }

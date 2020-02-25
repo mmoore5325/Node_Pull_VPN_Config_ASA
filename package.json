@@ -1,0 +1,29 @@
+{
+  "name": "vpn_app",
+  "version": "1.0.0",
+  "description": "Pull config from ASA",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmoore5325/Node_Pull_VPN_Config_ASA.git"
+  },
+  "keywords": [
+    "ASA",
+    "VPN",
+    "Node",
+    "IKEv1",
+    "IKEv2"
+  ],
+  "author": "Michael Moore, Joseph Mckenzie",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mmoore5325/Node_Pull_VPN_Config_ASA/issues"
+  },
+  "homepage": "https://github.com/mmoore5325/Node_Pull_VPN_Config_ASA#readme",
+  "dependencies": {
+    "is-ip": "^3.1.0"
+  }
+}
