@@ -92,16 +92,19 @@ function ValidateIPaddress(ipaddress) {
   }  
   
 const tunnelGroupConfig = async () => {
-    var regex = new RegExp('\d{1,3}');
+    var regex = new RegExp(/^(?=.*[^\.]$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.?){4}$/g);
     const readCryptoMap = readline.createInterface({
         input: fileStream
-      });
-      for await (const line of readCryptoMap) { 
-          if (regex.test(line)){
-              console.log(line);
-          };
-        };
+    });
+    for await (const line of readCryptoMap) {
+        if (line.includes("tunnel-group") && (regex.test(line.split(" ")[1]))) {
+            console.log(line);
+        } else {
+            // console.log(line.split(" ")[6])
+        }
     };
+};
+
 
     tunnelGroupConfig();
 
