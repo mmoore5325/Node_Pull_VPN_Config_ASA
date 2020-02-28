@@ -1,8 +1,9 @@
 const fs = require('fs');
 const readline = require('readline');
 const stream = require('stream');
-const fileStream = fs.createReadStream('CWA.txt');
+// const fileStream = fs.createReadStream('CWA.txt');
 const map = []
+
 
 // This code rights crypto map to file perfectly.
 //
@@ -107,8 +108,46 @@ const tunnelGroupConfig = async () => {
 };
 
 
-    tunnelGroupConfig();
+    // tunnelGroupConfig();
+function objectInfo(input) {
+    const output = new stream.PassThrough({ objectMode: true });
+    const rl = readline.createInterface({ input });
+    const line_counter = ((i = 0) => () => ++i)();
+    objectLineNum = 0;
+    rl.on("line", (line, lineno = line_counter()) => {
+        if(line.includes("object network")){
+            objectLineNum = lineno + 1;
+            // console.log(objectLineNum);
+            // console.log(lineno);
+        }
+        if (objectLineNum==lineno && line.includes("subnet")){
+            var x = line.split(" ");
+            console.log(x);
+        }
+    });
+    rl.on("close", () => {
+        output.push(null);
+    });
+    return output;
+}
+const input = fs.createReadStream("./CWA.txt");
+(async () => {
+    let hey = []
+    for await (const line of objectInfo(input)) {
+    }
+})();
 
+    // const objectInfo = async () => {
+    //     const readObjectInfo = readline.createInterface({
+    //         input: fileStream
+    //     });
+    //     for await (const line of readObjectInfo){
+    //         if(line.includes("object network")){
+    //             console.log(line);
+    //         };
+    //     }
+    // }
+    // objectInfo();
           
 
 

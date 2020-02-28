@@ -3,6 +3,8 @@ const readline = require('readline');
 const stream = require('stream');
 const isIp = require('is-ip');
 
+vpnT = {};
+
 function readLines(input) {
     const output = new stream.PassThrough({ objectMode: true });
     const rl = readline.createInterface({ input });
@@ -13,19 +15,16 @@ function readLines(input) {
         const ip = line.split(" ")[1]
         const checkip = isIp(ip)
         if (line.includes("ipsec-attributes") && checkip) {
-         ikev1line=lineno+1;        
+         ikev1line=lineno+1;
         }
         if (lineno == ikev1line && line.includes("ikev1")) {
             var ikev1psk = line.split(" ");
-            // console.log(ikev1psk[3]);
         }else if (lineno == ikev1line && line.includes("ikev2")){
             var ikev2psk = line.split(" ");
-            console.log(ikev2psk[4]);
             ikev2line=lineno+1;
         } 
         if(lineno == ikev2line && line.includes("ikev2")){
             var ikev2local = line.split(" ");
-            console.log(ikev2local[4]);
         }
     });
     rl.on("close", () => {
