@@ -1,100 +1,117 @@
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-console */
+
+
 const fs = require('fs');
 const readline = require('readline');
-const stream = require('stream');
 const isIp = require('is-ip');
 
-
-
 const readConfig = (input, tunnelConfig) => {
-    const rl = readline.createInterface({ input });
-    const line_counter = ((i = 0) => () => ++i)();
-    let objectName;
-    let objectLine = 0;
-    let objectLine2 = 0;
-    let objectmapJson 
-    rl.on("line", (line, lineNum = line_counter()) => {
-        //Remove space from begin and end of lines, split lines into array.
-        line = line.replace(/^\s+|\s+$/g, "");
-        const splitLineText = line.split(/\s+/);
-        if(line.includes("object network") || line.includes("object-group") && splitLineText[0] == "object-group"){
-            objectLine = lineNum + 1;
-            objectName = splitLineText[2];
-         
-        }
-        if(lineNum == objectLine){
-            if(splitLineText[0]=="subnet" || splitLineText[0]=="host"){
-                networkType = splitLineText[0];
-                if(splitLineText[0]=="host"){
-                    ipAddress=splitLineText[1];
-                }else if(splitLineText[0]=="subnet" && isIp(splitLineText[1])){
-                    ipAddress=splitLineText[1] + " " + splitLineText[2];
-                    // console.log(ipAddress);
-                }
-                objectJson = {
-                    [objectName]:
-                    {
-                        [networkType]: ipAddress
-                    }
-                }
-                // console.log(objectJson);
-            }
-            if(splitLineText[0]== "network-object" || splitLineText[0]=="group-object"){
-                objectLine = lineNum + 1;
-                // const 
-                if(splitLineText)
-                if(splitLineText[0]=="network-object" && isIp(splitLineText[1])){
-                    groupObjectKey = splitLineText[0];
-                    groupObjectVariable=splitLineText[1] + " " + splitLineText[2];
-                }else if(splitLineText[0]=="group-object"){
-                    groupObjectKey = splitLineText[0];
-                    groupObjectVariable=splitLineText[1];
-                }else if(splitLineText[1]=="object"){
-                    groupObjectKey = splitLineText[0];
-                    groupObjectVariable=splitLineText[2];
-                }
-                groupObjectJson =  {
-                    [objectName]:
-                        {  
-                           "object-group":
-                            {
-                               [groupObjectKey]: groupObjectVariable,
-                                // "group-object":[
-                                // {
-                                //     "CAULT-L2L-DST":
-                                //      {[   
-                                //         "network-object": "192.168.26.0 255.255.255.0",
-                                //     ]},
-                                //     "REMOTE_TEST_NETWORK":
-                                //     {   
-                                //         "network-object": "192.168.1.0 255.255.255.0",
-                                //         "network-object": "192.168.125.0 255.255.255.0",
-                                //         "network-object": "192.168.254.0 255.255.255.0"
-                                //     }
+  const rl = readline.createInterface({ input });
 
-                                // }]
-                            }
-                        }
-                    }
-        
-                    console.log(groupObjectJson)
-            }
-            if(splitLineText[0]=="group-object"){
-                //Find data of network object splitLineText[1];
-                //splitLineText[1] should be the key with the IP being the value of
-                // a previously created hash.
-               
-                // console.log(line);
-                // console.log(splitLineText[1])
-            }
+  const lineCounter = ((i = 0) => () => i++)();
+  let objectName;
+  let objectLine = 0;
+
+  rl.on('line', (line, lineNum = lineCounter()) => {
+    // Remove space from begin and end of lines
+    const formattedLine = line.replace(/^\s+|\s+$/g, '');
+    const splitLineText = formattedLine.split(/\s+/);
+    const [networkType] = splitLineText;
+    let [, ipAddress] = splitLineText;
+    let groupObjectKey;
+    let groupObjectVariable;
+    if (
+      line.includes('object network')
+      || (line.includes('object-group') && networkType === 'object-group')
+    ) {
+      objectLine = lineNum + 1;
+      [, , objectName] = splitLineText;
+    }
+
+    if (lineNum === objectLine) {
+      if (networkType === 'subnet' || splitLineText[0] === 'host') {
+        if (splitLineText[0] === 'subnet' && isIp(ipAddress)) {
+          const [, ip1, ip2] = splitLineText;
+          ipAddress = `${ip1} ${ip2}`;
         }
 
+        const objectJson = {
+          [objectName]: {
+            [networkType]: ipAddress,
+          },
+        };
+        tunnelConfig.push(objectJson);
+      }
+
+      if (networkType === 'network-object' || networkType === 'group-object') {
+        objectLine = lineNum + 1;
+        [groupObjectKey, groupObjectVariable] = splitLineText;
+
+        if (networkType === 'network-object' && isIp(ipAddress)) {
+          const [, ip1, ip2] = splitLineText;
+          groupObjectVariable = `${ip1} ${ip2}`;
+        } else if (networkType === 'group-object') {
+          [, groupObjectVariable] = splitLineText;
+        } else if (splitLineText[1] === 'object') {
+          [groupObjectKey, , groupObjectVariable] = splitLineText;
+        }
+
+        const groupObjectJson = {
+          [objectName]: {
+            'object-group': {
+              [groupObjectKey]: groupObjectVariable,
+            },
+          },
+        };
+        tunnelConfig.push(groupObjectJson);
+      }
+    }
+  });
+
+  const results = new Promise((ikevResults) => {
+    rl.on('close', () => {
+      const result = {};
+
+      for (const tunnelGroupHash of tunnelConfig) {
+        for (const ipaddress in tunnelGroupHash) {
+          if (!(ipaddress in result)) {
+            result[ipaddress] = [];
+          }
+          result[ipaddress].push(tunnelGroupHash[ipaddress]);
+        }
+      }
+      return ikevResults(result);
     });
+  });
+  return results;
+};
+
+const cleanup = (results) => {
+  const cleanedResults = [];
+  const keys = Object.keys(results);
+  keys.forEach((element) => {
+    const result = {};
+    results[element].forEach((tunnelGroupHash) => {
+      for (const ipaddress in tunnelGroupHash) {
+        if (!(ipaddress in result)) {
+          result[ipaddress] = [];
+        }
+        result[ipaddress].push(tunnelGroupHash[ipaddress]);
+      }
+    });
+    const newResult = { [element]: result };
+    cleanedResults.push(newResult);
+  });
+  return cleanedResults;
 };
 
 const startBuilding = async (file) => {
-    const input = fs.createReadStream(file);
-    const tunnelConfig = [];
-    const results = await readConfig(input, tunnelConfig);
-    // console.log(results);
+  const input = fs.createReadStream(file);
+  const tunnelConfig = [];
+  const results = await readConfig(input, tunnelConfig);
+  const cleanedResults = cleanup(results);
+  console.log(JSON.stringify(cleanedResults, null, 2));
 };
-startBuilding("./CWA.txt")
+startBuilding('./CWA.txt');
