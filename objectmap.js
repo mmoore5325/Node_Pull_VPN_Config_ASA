@@ -5,7 +5,7 @@ const isIp = require('is-ip');
 
 
 
-const readConfig = (input, tunnelConfig) => {
+const readConfig = (input, objectConfig) => {
     const rl = readline.createInterface({ input });
     const line_counter = ((i = 0) => () => ++i)();
     let objectName;
@@ -28,7 +28,6 @@ const readConfig = (input, tunnelConfig) => {
                     ipAddress=splitLineText[1];
                 }else if(splitLineText[0]=="subnet" && isIp(splitLineText[1])){
                     ipAddress=splitLineText[1] + " " + splitLineText[2];
-                    // console.log(ipAddress);
                 }
                 objectJson = {
                     [objectName]:
@@ -36,7 +35,7 @@ const readConfig = (input, tunnelConfig) => {
                         [networkType]: ipAddress
                     }
                 }
-                // console.log(objectJson);
+                objectConfig.push(objectJson);
             }
             if(splitLineText[0]== "network-object" || splitLineText[0]=="group-object"){
                 objectLine = lineNum + 1;
@@ -49,7 +48,7 @@ const readConfig = (input, tunnelConfig) => {
                     groupObjectKey = splitLineText[0];
                     groupObjectVariable=splitLineText[1];
                 }else if(splitLineText[1]=="object"){
-                    groupObjectKey = splitLineText[0];
+                    groupObjectKey = "network-object object";
                     groupObjectVariable=splitLineText[2];
                 }
                 groupObjectJson =  {
@@ -58,43 +57,51 @@ const readConfig = (input, tunnelConfig) => {
                            "object-group":
                             {
                                [groupObjectKey]: groupObjectVariable,
-                                // "group-object":[
-                                // {
-                                //     "CAULT-L2L-DST":
-                                //      {[   
-                                //         "network-object": "192.168.26.0 255.255.255.0",
-                                //     ]},
-                                //     "REMOTE_TEST_NETWORK":
-                                //     {   
-                                //         "network-object": "192.168.1.0 255.255.255.0",
-                                //         "network-object": "192.168.125.0 255.255.255.0",
-                                //         "network-object": "192.168.254.0 255.255.255.0"
-                                //     }
-
-                                // }]
                             }
                         }
                     }
-        
-                    console.log(groupObjectJson)
-            }
-            if(splitLineText[0]=="group-object"){
-                //Find data of network object splitLineText[1];
-                //splitLineText[1] should be the key with the IP being the value of
-                // a previously created hash.
-               
-                // console.log(line);
-                // console.log(splitLineText[1])
+                    objectConfig.push(groupObjectJson);
             }
         }
 
     });
+    const results = new Promise(objectResults => {
+        rl.on("close", () => {
+            result = {};
+            for (let objectGroupHash of objectConfig) {
+                for (let ipaddress in objectGroupHash) {
+                    if (!(ipaddress in result)) {
+                        result[ipaddress] = [];
+                    }
+                    result[ipaddress].push(objectGroupHash[ipaddress]);
+                }
+            }
+            return objectResults(result);
+        })
+    });
+    return results;
 };
 
 const startBuilding = async (file) => {
     const input = fs.createReadStream(file);
     const tunnelConfig = [];
     const results = await readConfig(input, tunnelConfig);
-    // console.log(results);
+    result = {};
+    let boom =  Object.keys(results)
+    console.log(results)
+    boom.forEach(element => {
+        // console.log(results[element])
+        result = {};
+        for (let tunnelGroupHash of results[element]) {
+            
+            for (let ipaddress in tunnelGroupHash) {
+                if (!(ipaddress in result)) {
+                    result[ipaddress] = [];
+                }
+                result[ipaddress].push(tunnelGroupHash[ipaddress]);
+            }
+        }
+        // console.log(result)
+    });
 };
 startBuilding("./CWA.txt")
