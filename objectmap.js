@@ -1,16 +1,11 @@
-/* eslint-disable guard-for-in */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-console */
-
-
 const fs = require('fs');
 const readline = require('readline');
 const isIp = require('is-ip');
 
 const readConfig = (input, tunnelConfig) => {
   const rl = readline.createInterface({ input });
-
   const lineCounter = ((i = 0) => () => i++)();
+
   let objectName;
   let objectLine = 0;
 
@@ -23,9 +18,7 @@ const readConfig = (input, tunnelConfig) => {
     let groupObjectKey;
     let groupObjectVariable;
     if (
-      line.includes('object network')
-      || (line.includes('object-group') && networkType === 'object-group')
-    ) {
+      line.includes('object network') || (line.includes('object-group') && networkType === 'object-group')) {
       objectLine = lineNum + 1;
       [, , objectName] = splitLineText;
     }
@@ -52,17 +45,22 @@ const readConfig = (input, tunnelConfig) => {
         if (networkType === 'network-object' && isIp(ipAddress)) {
           const [, ip1, ip2] = splitLineText;
           groupObjectVariable = `${ip1} ${ip2}`;
-        } else if (networkType === 'group-object') {
+        }
+
+        if (networkType === 'group-object') {
           [, groupObjectVariable] = splitLineText;
-        } else if (splitLineText[1] === 'object') {
-          [groupObjectKey, , groupObjectVariable] = splitLineText;
+        }
+
+        if (networkType === 'network-object' && groupObjectVariable === 'object') {
+          [, , groupObjectVariable] = splitLineText;
+          groupObjectKey = 'network-object-object';
         }
 
         const groupObjectJson = {
           [objectName]: {
-            'object-group': {
-              [groupObjectKey]: groupObjectVariable,
-            },
+            // 'object-group': {
+            [groupObjectKey]: groupObjectVariable,
+            // },
           },
         };
         tunnelConfig.push(groupObjectJson);
@@ -71,39 +69,39 @@ const readConfig = (input, tunnelConfig) => {
   });
 
   const results = new Promise((ikevResults) => {
-    rl.on('close', () => {
-      const result = {};
-
-      for (const tunnelGroupHash of tunnelConfig) {
-        for (const ipaddress in tunnelGroupHash) {
-          if (!(ipaddress in result)) {
-            result[ipaddress] = [];
-          }
-          result[ipaddress].push(tunnelGroupHash[ipaddress]);
-        }
-      }
-      return ikevResults(result);
-    });
+    rl.on('close', () => ikevResults(tunnelConfig));
   });
+
   return results;
 };
 
-const cleanup = (results) => {
+const cleanup = (tunnelConfig) => {
+  const results = {};
   const cleanedResults = [];
-  const keys = Object.keys(results);
-  keys.forEach((element) => {
+
+  tunnelConfig.forEach((tunnelGroupHash) => {
+    Object.keys(tunnelGroupHash).forEach((ipaddress) => {
+      if (!(ipaddress in results)) {
+        results[ipaddress] = [];
+      }
+      results[ipaddress].push(tunnelGroupHash[ipaddress]);
+    });
+  });
+
+  Object.keys(results).forEach((element) => {
     const result = {};
     results[element].forEach((tunnelGroupHash) => {
-      for (const ipaddress in tunnelGroupHash) {
+      Object.keys(tunnelGroupHash).forEach((ipaddress) => {
         if (!(ipaddress in result)) {
           result[ipaddress] = [];
         }
         result[ipaddress].push(tunnelGroupHash[ipaddress]);
-      }
+      });
     });
     const newResult = { [element]: result };
     cleanedResults.push(newResult);
   });
+
   return cleanedResults;
 };
 
@@ -112,6 +110,9 @@ const startBuilding = async (file) => {
   const tunnelConfig = [];
   const results = await readConfig(input, tunnelConfig);
   const cleanedResults = cleanup(results);
+  
   console.log(JSON.stringify(cleanedResults, null, 2));
 };
+
+
 startBuilding('./CWA.txt');
